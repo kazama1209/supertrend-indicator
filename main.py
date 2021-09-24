@@ -52,7 +52,7 @@ def make_super_trend(df, look_back = 10, multiplier = 3):
     hl_avg = (high + low ) / 2
     st_lower_band = (hl_avg - multiplier * atr).dropna()
     st_upper_band = (hl_avg + multiplier * atr).dropna()
-    is_up_trend = np.zeros(len(df)) # 「is_up_trend」がTrueなら上昇トレンド、Falseなら下降トレンド
+    is_up_trend = np.zeros(len(df)) # 「is_up_trend」が1なら上昇トレンド、0なら下降トレンド
 
     for i in range(len(df.index)):
         current = i
@@ -65,16 +65,16 @@ def make_super_trend(df, look_back = 10, multiplier = 3):
         else:
             is_up_trend[current] = is_up_trend[previous]
 
-            if is_up_trend[current] and st_lower_band[current] < st_lower_band[previous]: # 上昇トレンドかつ現在のバンド下限が前のバンド下限を下回っていた場合は前のバンド下限を継続
+            if is_up_trend[current] == 1 and st_lower_band[current] < st_lower_band[previous]: # 上昇トレンドかつ現在のバンド下限が前のバンド下限を下回っていた場合は前のバンド下限を継続
                 st_lower_band[current] = st_lower_band[previous]
-            elif not is_up_trend[current] and st_upper_band[current] > st_upper_band[previous]: # 下降トレンドかつ現在のバンド上限が前のバンド上限を上回っていた場合は前のバンド上限を継続
+            elif is_up_trend[current] == 0 and st_upper_band[current] > st_upper_band[previous]: # 下降トレンドかつ現在のバンド上限が前のバンド上限を上回っていた場合は前のバンド上限を継続
                 st_upper_band[current] = st_upper_band[previous]
     
     # 上昇トレンドの場合はバンド上限を消し、下降トレンドの場合はバンド下限を消す
     for i in range(len(df.index)):
         if is_up_trend[i] == 1:
             st_upper_band[i] = np.nan
-        else:
+        elif is_up_trend[i] == 0:
             st_lower_band[i] = np.nan
     
     return st_lower_band, st_upper_band
